@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom", "dom.iterable", "esnext"],
+    "types": ["deno.ns"]
+  },
+  "include": ["src/lib/supabase/functions/**/*.ts"]
+}
