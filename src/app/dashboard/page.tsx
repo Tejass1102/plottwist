@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/layout/NavBar";
 import SearchBar from "@/components/search/SearchBar";
-import LogEntryModal from "@/components/diary/LogEntryModal";
+import MovieDetailModal from "@/components/diary/MovieDetailModal"; // ← changed
 import DiaryEntryCard from "@/components/diary/DiaryEntryCard";
 import Link from "next/link";
 import type { NormalizedSearchResult } from "@/lib/types/tmdb";
@@ -95,8 +95,8 @@ export default function DashboardPage() {
       </div>
 
       {selectedMedia && (
-        <LogEntryModal
-          media={selectedMedia}
+        <MovieDetailModal // ← changed
+          media={selectedMedia} // ← same prop name as before
           onClose={() => setSelectedMedia(null)}
           onSaved={fetchEntries}
         />

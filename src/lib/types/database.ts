@@ -31,7 +31,7 @@ export interface DiaryEntry {
   poster_path: string | null;
   release_year: number | null;
   watched_on: string; // ISO date string e.g. "2024-11-15"
-  rating: RatingLabel;
+  rating: RatingLabel | null;
   review: string | null;
   rewatch: boolean;
   created_at: string;
@@ -73,6 +73,28 @@ export interface ListEntry {
   added_at: string;
 }
 
+export interface Watchlist {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  media_type: MediaType;
+  title: string;
+  poster_path: string | null;
+  release_year: number | null;
+  added_at: string;
+}
+
+export interface UserLike {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  media_type: MediaType;
+  title: string;
+  poster_path: string | null;
+  release_year: number | null;
+  liked_at: string;
+}
+
 // ── Joined / enriched types ──────────────────
 
 // DiaryEntry with profile info (for public pages)
@@ -100,3 +122,7 @@ export type SeriesProgressInsert = Omit<
 export type ProfileUpdate = Partial<
   Pick<Profile, "username" | "display_name" | "avatar_url" | "bio">
 >;
+
+export type WatchlistInsert = Omit<Watchlist, "id" | "added_at">;
+
+export type UserLikeInsert = Omit<UserLike, "id" | "liked_at">;

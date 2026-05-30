@@ -11,7 +11,7 @@ import DiaryFilters, {
 } from "@/components/diary/DiaryFilters";
 import StatsGrid from "@/components/stats/StatsGrid";
 import SearchBar from "@/components/search/SearchBar";
-import LogEntryModal from "@/components/diary/LogEntryModal";
+import MovieDetailModal from "@/components/diary/MovieDetailModal"; // ← changed
 import type { DiaryEntry } from "@/lib/types/database";
 import type { NormalizedSearchResult } from "@/lib/types/tmdb";
 import ChatWidget from "@/components/chat/ChatWidget";
@@ -191,8 +191,8 @@ export default function DiaryPage() {
       </div>
 
       {selectedMedia && (
-        <LogEntryModal
-          media={selectedMedia}
+        <MovieDetailModal // ← changed
+          media={selectedMedia} // ← same prop name as before
           onClose={() => setSelectedMedia(null)}
           onSaved={fetchEntries}
         />
