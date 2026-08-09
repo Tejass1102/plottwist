@@ -1,6 +1,7 @@
 // src/components/stats/StatsGrid.tsx
 "use client";
 
+import { useState, useMemo } from "react";
 import type { DiaryEntry } from "@/lib/types/database";
 
 interface Props {
@@ -21,42 +22,92 @@ const RATING_TEXT: Record<string, string> = {
   Skip: "text-red-400",
 };
 
-export default function StatsGrid({ entries }: Props) {
-  const movies = entries.filter((e) => e.media_type === "movie").length;
-  const series = entries.filter((e) => e.media_type === "series").length;
-  const rewatches = entries.filter((e) => e.rewatch).length;
-  const total = entries.length;
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
-  // Rating distribution
+function uniqueMovies(entries: DiaryEntry[]) {
+  return new Set(
+    entries.filter((e) => e.media_type === "movie").map((e) => e.tmdb_id),
+  ).size;
+}
+function uniqueSeries(entries: DiaryEntry[]) {
+  return new Set(
+    entries.filter((e) => e.media_type === "series").map((e) => e.tmdb_id),
+  ).size;
+}
+
+export default function StatsGrid({ entries }: Props) {
+  // ── All-time totals ─────────────────────────────────────────
+  const allMovies  = uniqueMovies(entries);
+  const allSeries  = uniqueSeries(entries);
+  const allRewatches = entries.filter((e) => e.rewatch).length;
+  const allTotal   = entries.length;
+
+  // ── Year list ────────────────────────────────────────────────
+  const years = useMemo(() => {
+    const s = new Set(entries.map((e) => e.watched_on.slice(0, 4)));
+    return [...s].sort((a, b) => Number(b) - Number(a));
+  }, [entries]);
+
+  const [selectedYear, setSelectedYear] = useState<string>(
+    years[0] ?? String(new Date().getFullYear()),
+  );
+
+  // ── Year-filtered entries ────────────────────────────────────
+  const yearEntries = useMemo(
+    () => entries.filter((e) => e.watched_on.startsWith(selectedYear)),
+    [entries, selectedYear],
+  );
+
+  const yearMovies   = uniqueMovies(yearEntries);
+  const yearSeries   = uniqueSeries(yearEntries);
+  const yearRewatches = yearEntries.filter((e) => e.rewatch).length;
+  const yearTotal    = yearMovies + yearSeries;
+
+  // ── Rating distribution (year-scoped) ───────────────────────
   const ratingCounts = RATING_ORDER.reduce(
     (acc, r) => {
-      acc[r] = entries.filter((e) => e.rating === r).length;
+      acc[r] = yearEntries.filter((e) => e.rating === r).length;
       return acc;
     },
     {} as Record<string, number>,
   );
-
   const maxCount = Math.max(...Object.values(ratingCounts), 1);
 
-  // Watches by month (last 12)
-  const byMonth: Record<string, number> = {};
-  const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    byMonth[key] = 0;
-  }
-  entries.forEach((e) => {
-    const key = e.watched_on.slice(0, 7);
-    if (key in byMonth) byMonth[key]++;
-  });
-  const monthMax = Math.max(...Object.values(byMonth), 1);
-  const monthLabels = Object.keys(byMonth).map((k) =>
-    new Date(k + "-01").toLocaleDateString("en-US", { month: "short" }),
-  );
-  const monthValues = Object.values(byMonth);
+  // ── Month-wise breakdown (year-scoped) ──────────────────────
+  const monthRows = useMemo(() => {
+    return MONTH_NAMES.map((label, i) => {
+      const monthKey = `${selectedYear}-${String(i + 1).padStart(2, "0")}`;
+      const monthEntries = yearEntries.filter((e) =>
+        e.watched_on.startsWith(monthKey),
+      );
+      return {
+        label,
+        total: uniqueMovies(monthEntries) + uniqueSeries(monthEntries),
+        movies: uniqueMovies(monthEntries),
+        series: uniqueSeries(monthEntries),
+      };
+    });
+  }, [yearEntries, selectedYear]);
 
-  if (total === 0) {
+  const monthMax = Math.max(...monthRows.map((m) => m.total), 1);
+
+  // ── Year-wise summary table ──────────────────────────────────
+  const yearRows = useMemo(() => {
+    return years.map((yr) => {
+      const ye = entries.filter((e) => e.watched_on.startsWith(yr));
+      return {
+        year: yr,
+        total: uniqueMovies(ye) + uniqueSeries(ye),
+        movies: uniqueMovies(ye),
+        series: uniqueSeries(ye),
+      };
+    });
+  }, [entries, years]);
+
+  if (allTotal === 0) {
     return (
       <div className="text-center py-8 text-gray-600 text-sm">
         Log some entries to see your stats.
@@ -66,28 +117,190 @@ export default function StatsGrid({ entries }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: "Total", value: total },
-          { label: "Movies", value: movies },
-          { label: "Series", value: series },
-          { label: "Rewatches", value: rewatches },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center"
-          >
-            <p className="text-2xl font-bold text-white">{s.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{s.label}</p>
-          </div>
-        ))}
+
+      {/* ── All-time summary cards ── */}
+      <div>
+        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-3">
+          All Time
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "Movies", value: allMovies },
+            { label: "Series", value: allSeries },
+            { label: "Rewatches", value: allRewatches },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center"
+            >
+              <p className="text-2xl font-bold text-white">{s.value}</p>
+              <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Rating distribution */}
+      {/* ── Year-wise summary table ── */}
+      {yearRows.length > 1 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">
+            Year by Year
+          </h3>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-gray-500 border-b border-gray-800">
+                <th className="text-left pb-2 font-medium">Year</th>
+                <th className="text-right pb-2 font-medium">Total</th>
+                <th className="text-right pb-2 font-medium">Movies</th>
+                <th className="text-right pb-2 font-medium">Series</th>
+              </tr>
+            </thead>
+            <tbody>
+              {yearRows.map((row) => (
+                <tr
+                  key={row.year}
+                  onClick={() => setSelectedYear(row.year)}
+                  className={`border-b border-gray-800/50 cursor-pointer transition-colors last:border-0 ${
+                    selectedYear === row.year
+                      ? "text-white"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  <td className="py-2.5 font-medium">
+                    {row.year}
+                    {selectedYear === row.year && (
+                      <span className="ml-2 text-xs text-indigo-400">▶</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 text-right">{row.total}</td>
+                  <td className="py-2.5 text-right text-blue-400">{row.movies}</td>
+                  <td className="py-2.5 text-right text-purple-400">{row.series}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── Year selector + year stats ── */}
+      <div>
+        {/* Year tabs */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-xs text-gray-500 uppercase tracking-widest mr-1">
+            {selectedYear}
+          </span>
+          <div className="flex gap-1 flex-wrap">
+            {years.map((yr) => (
+              <button
+                key={yr}
+                onClick={() => setSelectedYear(yr)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                  selectedYear === yr
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-800 text-gray-400 hover:text-white"
+                }`}
+              >
+                {yr}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Year summary cards */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            { label: "Movies", value: yearMovies },
+            { label: "Series", value: yearSeries },
+            { label: "Rewatches", value: yearRewatches },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center"
+            >
+              <p className="text-xl font-bold text-white">{s.value}</p>
+              <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Month-wise bar chart */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4">
+          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">
+            Monthly Activity — {selectedYear}
+          </h3>
+          <div className="flex items-end gap-1.5 h-24">
+            {monthRows.map((m) => (
+              <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className="w-full rounded-sm bg-gray-800 relative"
+                  style={{ height: "80px" }}
+                >
+                  <div
+                    className="absolute bottom-0 w-full rounded-sm bg-indigo-600 transition-all"
+                    style={{ height: `${(m.total / monthMax) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-1.5 mt-1">
+            {monthRows.map((m) => (
+              <div key={m.label} className="flex-1 text-center">
+                <span className="text-gray-600" style={{ fontSize: "9px" }}>
+                  {m.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Month-wise table */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">
+            Month by Month — {selectedYear}
+          </h3>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-gray-500 border-b border-gray-800">
+                <th className="text-left pb-2 font-medium">Month</th>
+                <th className="text-right pb-2 font-medium">Total</th>
+                <th className="text-right pb-2 font-medium">Movies</th>
+                <th className="text-right pb-2 font-medium">Series</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthRows
+                .filter((m) => m.total > 0)
+                .map((m) => (
+                  <tr
+                    key={m.label}
+                    className="border-b border-gray-800/50 last:border-0"
+                  >
+                    <td className="py-2.5 text-gray-300 font-medium">{m.label}</td>
+                    <td className="py-2.5 text-right text-white">{m.total}</td>
+                    <td className="py-2.5 text-right text-blue-400">{m.movies}</td>
+                    <td className="py-2.5 text-right text-purple-400">{m.series}</td>
+                  </tr>
+                ))}
+              {monthRows.every((m) => m.total === 0) && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-6 text-center text-gray-600 text-xs"
+                  >
+                    No entries for {selectedYear}.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Rating distribution (year-scoped) ── */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">
-          Rating distribution
+          Rating Distribution — {selectedYear}
         </h3>
         <div className="flex flex-col gap-3">
           {RATING_ORDER.map((r) => (
@@ -103,37 +316,6 @@ export default function StatsGrid({ entries }: Props) {
               </div>
               <span className="text-xs text-gray-500 w-6 text-right">
                 {ratingCounts[r]}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Monthly activity */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">
-          Activity — last 12 months
-        </h3>
-        <div className="flex items-end gap-1.5 h-20">
-          {monthValues.map((v, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-full rounded-sm bg-gray-800 relative"
-                style={{ height: "64px" }}
-              >
-                <div
-                  className="absolute bottom-0 w-full rounded-sm bg-indigo-600 transition-all"
-                  style={{ height: `${(v / monthMax) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-1.5 mt-1">
-          {monthLabels.map((l, i) => (
-            <div key={i} className="flex-1 text-center">
-              <span className="text-gray-600" style={{ fontSize: "9px" }}>
-                {l}
               </span>
             </div>
           ))}

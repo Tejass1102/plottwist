@@ -10,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 const NAV_LINKS = [
   { href: "/dashboard", label: "Home" },
   { href: "/diary", label: "Diary" },
+  { href: "/stats", label: "Stats" },
 ];
 
 export default function Navbar() {
@@ -43,10 +44,10 @@ export default function Navbar() {
 
   return (
     <nav className="border-b border-gray-800 bg-gray-950 sticky top-0 z-40">
-      <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link href="/dashboard" className="text-lg font-bold text-white">
-          Screen<span className="text-indigo-500">vault</span>
+          Plot<span className="text-indigo-500">Twist</span>
         </Link>
 
         {/* Nav links */}

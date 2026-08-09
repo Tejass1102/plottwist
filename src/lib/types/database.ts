@@ -34,6 +34,8 @@ export interface DiaryEntry {
   rating: RatingLabel | null;
   review: string | null;
   rewatch: boolean;
+  season: number | null;
+  episode: number | null;
   created_at: string;
   updated_at: string;
 }

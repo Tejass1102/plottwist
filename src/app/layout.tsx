@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Screenvault",
+  title: "PlotTwist",
   description: "Track every movie and series you watch",
 };
 

@@ -35,12 +35,6 @@ export default function SignupPage() {
     }
   }
 
-  async function handleGoogleSignup() {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
-    });
-  }
 
   if (done) {
     return (
@@ -70,19 +64,6 @@ export default function SignupPage() {
           Start tracking what you watch
         </p>
 
-        <button
-          onClick={handleGoogleSignup}
-          className="w-full py-2.5 rounded-lg border border-gray-700 text-white text-sm
-                     hover:bg-gray-800 transition mb-6 flex items-center justify-center gap-2"
-        >
-          Continue with Google
-        </button>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-gray-800" />
-          <span className="text-gray-600 text-xs">or</span>
-          <div className="flex-1 h-px bg-gray-800" />
-        </div>
 
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <input

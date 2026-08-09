@@ -24,7 +24,8 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
   const [review, setReview] = useState("");
   const [rewatch, setRewatch] = useState(false);
   const [season, setSeason] = useState(1);
-  const [episode, setEpisode] = useState(1);
+  const [episodeFrom, setEpisodeFrom] = useState(1);
+  const [episodeTo, setEpisodeTo] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,29 +49,43 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
       return;
     }
 
-    // 1. Save diary entry
-    const { error: diaryError } = await supabase.from("diary_entries").insert({
-      user_id: user.id,
-      tmdb_id: media.tmdb_id,
-      media_type: media.media_type,
-      title: media.title,
-      poster_path: media.poster_path,
-      release_year: media.year,
-      watched_on: watchedOn,
-      rating,
-      review: review.trim() || null,
-      rewatch,
-    });
+    // 1. Save diary entries — one row per episode for series, one row for movies
+    const episodeList = isSeries
+      ? Array.from(
+          { length: episodeTo - episodeFrom + 1 },
+          (_, i) => episodeFrom + i,
+        )
+      : [null];
 
-    if (diaryError) {
-      // Unique constraint = already logged this title on this date
-      if (diaryError.code === "23505") {
-        setError("You already logged this title on that date.");
-      } else {
-        setError(diaryError.message);
+    for (const ep of episodeList) {
+      const { error: diaryError } = await supabase.from("diary_entries").insert({
+        user_id: user.id,
+        tmdb_id: media.tmdb_id,
+        media_type: media.media_type,
+        title: media.title,
+        poster_path: media.poster_path,
+        release_year: media.year,
+        watched_on: watchedOn,
+        rating,
+        review: review.trim() || null,
+        rewatch,
+        season: isSeries ? season : null,
+        episode: ep,
+      });
+
+      if (diaryError) {
+        if (diaryError.code === "23505") {
+          setError(
+            isSeries
+              ? `S${season}E${ep} already logged on that date.`
+              : "You already logged this title on that date.",
+          );
+        } else {
+          setError(diaryError.message);
+        }
+        setSaving(false);
+        return;
       }
-      setSaving(false);
-      return;
     }
 
     // 2. Upsert series progress if it's a series
@@ -83,7 +98,7 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
           poster_path: media.poster_path,
           status: "watching",
           current_season: season,
-          current_episode: episode,
+          current_episode: episodeTo,
         },
         { onConflict: "user_id,tmdb_series_id" },
       );
@@ -118,9 +133,8 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
           </div>
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <span
-              className={`text-xs font-medium mb-1 ${
-                isSeries ? "text-purple-400" : "text-blue-400"
-              }`}
+              className={`text-xs font-medium mb-1 ${isSeries ? "text-purple-400" : "text-blue-400"
+                }`}
             >
               {isSeries ? "Series" : "Movie"}
               {media.year ? ` · ${media.year}` : ""}
@@ -184,13 +198,32 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
                 </div>
                 <div className="flex-1">
                   <label className="text-xs text-gray-500 mb-1 block">
-                    Episode
+                    Ep. From
                   </label>
                   <input
                     type="number"
                     min={1}
-                    value={episode}
-                    onChange={(e) => setEpisode(Number(e.target.value))}
+                    value={episodeFrom}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setEpisodeFrom(v);
+                      if (v > episodeTo) setEpisodeTo(v);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700
+                               text-white text-sm outline-none focus:border-indigo-500 transition"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Ep. To
+                  </label>
+                  <input
+                    type="number"
+                    min={episodeFrom}
+                    value={episodeTo}
+                    onChange={(e) =>
+                      setEpisodeTo(Math.max(episodeFrom, Number(e.target.value)))
+                    }
                     className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700
                                text-white text-sm outline-none focus:border-indigo-500 transition"
                   />
@@ -220,14 +253,12 @@ export default function LogEntryModal({ media, onClose, onSaved }: Props) {
           <label className="flex items-center gap-3 cursor-pointer">
             <div
               onClick={() => setRewatch((r) => !r)}
-              className={`w-9 h-5 rounded-full transition-colors relative ${
-                rewatch ? "bg-indigo-600" : "bg-gray-700"
-              }`}
+              className={`w-9 h-5 rounded-full transition-colors relative ${rewatch ? "bg-indigo-600" : "bg-gray-700"
+                }`}
             >
               <div
-                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                  rewatch ? "translate-x-4" : "translate-x-0.5"
-                }`}
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${rewatch ? "translate-x-4" : "translate-x-0.5"
+                  }`}
               />
             </div>
             <span className="text-sm text-gray-400">Rewatch</span>

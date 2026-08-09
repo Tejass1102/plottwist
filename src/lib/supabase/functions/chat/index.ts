@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const diarySection =
       diary.length > 0
         ? `
-The user's Screenvault diary (${diary.length} entries — ${movies} movies, ${series} series):
+The user's PlotTwist diary (${diary.length} entries — ${movies} movies, ${series} series):
 
 🏆 MASTERPIECE (${masterpieces.length}): ${masterpieces.slice(0, 25).join(", ") || "None yet"}
 👍 GREAT (${great.length}): ${great.slice(0, 25).join(", ") || "None yet"}
@@ -87,7 +87,7 @@ Recent watches: ${diary
             .join(", ")}`
         : "The user has not logged any entries yet. Encourage them to start logging!";
 
-    const systemPrompt = `You are a friendly, knowledgeable film and TV assistant for Screenvault — a personal watch tracker.
+    const systemPrompt = `You are a friendly, knowledgeable film and TV assistant for PlotTwist — a personal watch tracker.
 
 ${diarySection}
 
@@ -98,7 +98,7 @@ Guidelines:
 - You can discuss plot, themes, directors, cinematography, awards, hidden details, trivia.
 - Be enthusiastic but not over the top. Film-literate, never pretentious.
 - Never invent films that don't exist.
-- The rating system on Screenvault is: Skip (bad) · Mid (okay) · Great (good) · Masterpiece (exceptional).
+- The rating system on PlotTwist is: Skip (bad) · Mid (okay) · Great (good) · Masterpiece (exceptional).
 ${
   mode === "recommend"
     ? "- The user wants recommendations. Give 3-5 specific tailored suggestions with a one-line reason for each."

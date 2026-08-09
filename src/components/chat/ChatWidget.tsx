@@ -177,7 +177,7 @@ export default function ChatWidget() {
               <span className="text-base">🎬</span>
               <div>
                 <p className="text-sm font-semibold text-white">
-                  Screenvault AI
+                   PlotTwist AI
                 </p>
                 <p className="text-xs text-gray-500">Knows your taste</p>
               </div>

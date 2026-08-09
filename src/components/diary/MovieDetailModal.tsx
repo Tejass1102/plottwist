@@ -330,8 +330,8 @@ export default function MovieDetailModal({
 
   async function handleShare() {
     const text = currentRating
-      ? `Just rated "${media.title}" as ${currentRating} on Screenvault`
-      : `Check out "${media.title}" on Screenvault`;
+      ? `Just rated "${media.title}" as ${currentRating} on PlotTwist`
+      : `Check out "${media.title}" on PlotTwist`;
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: media.title, text });

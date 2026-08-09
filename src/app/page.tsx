@@ -16,7 +16,7 @@ export default async function HomePage() {
       <div className="max-w-xl w-full text-center">
         {/* Logo / wordmark */}
         <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">
-          Screen<span className="text-indigo-500">vault</span>
+          Plot<span className="text-indigo-500">Twist</span>
         </h1>
         <p className="text-gray-400 text-lg mb-10">
           Track every movie and series you watch.

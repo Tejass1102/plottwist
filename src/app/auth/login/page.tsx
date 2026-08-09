@@ -32,36 +32,15 @@ export default function LoginPage() {
     }
   }
 
-  async function handleGoogleLogin() {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    });
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <div className="w-full max-w-sm p-8 rounded-2xl bg-gray-900 border border-gray-800">
         <h1 className="text-2xl font-semibold text-white mb-2">Welcome back</h1>
         <p className="text-gray-400 text-sm mb-8">
-          Sign in to your Screenvault
+          Sign in to your PlotTwist
         </p>
 
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full py-2.5 rounded-lg border border-gray-700 text-white text-sm
-                     hover:bg-gray-800 transition mb-6 flex items-center justify-center gap-2"
-        >
-          Continue with Google
-        </button>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-gray-800" />
-          <span className="text-gray-600 text-xs">or</span>
-          <div className="flex-1 h-px bg-gray-800" />
-        </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input

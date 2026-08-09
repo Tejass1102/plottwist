@@ -7,6 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { getPosterUrl } from "@/lib/tmdb";
 import type { DiaryEntry } from "@/lib/types/database";
 
+export interface GroupedEntry
+  extends Omit<DiaryEntry, "id" | "episode"> {
+  /** All DB row IDs that belong to this group */
+  ids: string[];
+  episodeFrom: number | null;
+  episodeTo: number | null;
+}
+
 const RATING_STYLES: Record<string, string> = {
   Skip: "bg-red-950 text-red-400 border border-red-900",
   Mid: "bg-yellow-950 text-yellow-400 border border-yellow-900",
@@ -15,8 +23,9 @@ const RATING_STYLES: Record<string, string> = {
 };
 
 interface Props {
-  entry: DiaryEntry;
-  onDeleted: (id: string) => void;
+  entry: GroupedEntry;
+  /** Called with every id that was deleted */
+  onDeleted: (ids: string[]) => void;
 }
 
 export default function DiaryEntryCard({ entry, onDeleted }: Props) {
@@ -25,10 +34,14 @@ export default function DiaryEntryCard({ entry, onDeleted }: Props) {
   const supabase = createClient();
 
   async function handleDelete() {
-    if (!confirm(`Remove "${entry.title}" from your diary?`)) return;
+    const label =
+      entry.ids.length > 1
+        ? `${entry.ids.length} episodes of "${entry.title}"`
+        : `"${entry.title}"`;
+    if (!confirm(`Remove ${label} from your diary?`)) return;
     setDeleting(true);
-    await supabase.from("diary_entries").delete().eq("id", entry.id);
-    onDeleted(entry.id);
+    await supabase.from("diary_entries").delete().in("id", entry.ids);
+    onDeleted(entry.ids);
   }
 
   const formattedDate = new Date(
@@ -85,6 +98,16 @@ export default function DiaryEntryCard({ entry, onDeleted }: Props) {
             >
               {entry.media_type === "movie" ? "Movie" : "Series"}
             </span>
+            {entry.media_type === "series" &&
+              entry.season != null &&
+              entry.episodeFrom != null &&
+              entry.episodeTo != null && (
+                <span className="text-xs text-gray-500 font-mono">
+                  {entry.episodeFrom === entry.episodeTo
+                    ? `S${String(entry.season).padStart(2, "0")}E${String(entry.episodeFrom).padStart(2, "0")}`
+                    : `S${String(entry.season).padStart(2, "0")} E${String(entry.episodeFrom).padStart(2, "0")}–E${String(entry.episodeTo).padStart(2, "0")}`}
+                </span>
+              )}
           </div>
         </div>
 

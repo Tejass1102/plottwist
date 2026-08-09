@@ -1,6 +1,6 @@
-# Screenvault
+# PlotTwist
 
-Screenvault is a personal watch tracker and recommendation assistant built with Next.js, React, Tailwind CSS, and Supabase. It lets users log movies and series, rate them, and receive personalized recommendations powered by a Groq-compatible AI chat endpoint.
+PlotTwist is a personal watch tracker and recommendation assistant built with Next.js, React, Tailwind CSS, and Supabase. It lets users log movies and series, rate them, and receive personalized recommendations powered by a Groq-compatible AI chat endpoint.
 
 ## Features
 
