@@ -207,7 +207,7 @@ export default function MovieDetailModal({
           media_type: media.media_type,
           title: media.title,
           poster_path: media.poster_path ?? null,
-          release_year: media.release_year ?? null,
+          release_year: media.year ?? null,
           watched_on: today,
         },
         { onConflict: "user_id,tmdb_id,watched_on", ignoreDuplicates: true },
@@ -244,7 +244,7 @@ export default function MovieDetailModal({
         media_type: media.media_type,
         title: media.title,
         poster_path: media.poster_path ?? null,
-        release_year: media.release_year ?? null,
+        release_year: media.year ?? null,
       });
       setIsLiked(true);
     }
@@ -277,7 +277,7 @@ export default function MovieDetailModal({
         media_type: media.media_type,
         title: media.title,
         poster_path: media.poster_path ?? null,
-        release_year: media.release_year ?? null,
+        release_year: media.year ?? null,
       });
       setIsWatchlisted(true);
     }
@@ -317,7 +317,7 @@ export default function MovieDetailModal({
           media_type: media.media_type,
           title: media.title,
           poster_path: media.poster_path ?? null,
-          release_year: media.release_year ?? null,
+          release_year: media.year ?? null,
           watched_on: today,
           rating: newRating,
         },
@@ -410,9 +410,9 @@ export default function MovieDetailModal({
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-indigo-600/25 text-indigo-300 border border-indigo-500/30">
                   {media.media_type === "movie" ? "Movie" : "Series"}
                 </span>
-                {media.release_year && (
+                {media.year && (
                   <span className="text-xs text-gray-400 font-medium">
-                    {media.release_year}
+                 {media.year}
                   </span>
                 )}
               </div>

@@ -114,7 +114,7 @@ export default function DiaryEntryCard({ entry, onDeleted }: Props) {
         {/* Rating */}
         <span
           className={`text-xs font-medium px-2.5 py-1 rounded-lg flex-shrink-0
-          ${RATING_STYLES[entry.rating]}`}
+          ${RATING_STYLES[entry.rating ?? ""]}`}
         >
           {entry.rating}
         </span>
