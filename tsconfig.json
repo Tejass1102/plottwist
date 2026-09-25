@@ -31,5 +31,5 @@
     "**/*.mts",
     "next.config.js"
   ],
-  "exclude": ["node_modules", "src/lib/supabase/functions"]
+  "exclude": ["node_modules", "src/lib/supabase/functions", "supabase"]
 }
